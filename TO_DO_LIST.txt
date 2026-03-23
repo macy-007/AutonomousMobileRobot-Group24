@@ -1,0 +1,9 @@
+Goal: Create Cascade PID 2 or 3 layers
+
+Tasks:
+
+1. Inner Layer
+2. Outer Layer
+3. Middle Layer
+4. Tune PIDs
+5. Fallback simple PID 
