@@ -14,7 +14,7 @@ Here is a clean, structured task list broken down by the three roles we discusse
 copy and paste this directly into a shared document or group chat and just drop your names on the dotted lines.
 
 Role 1: Inner Loop Engineer (Velocity)
-Assignee: _______________________
+Assignee: Ewan
 Focus: Ensuring the drone achieves the exact speed it is commanded to fly.
 
 [ ] Draft the Layer 2 PID function that takes Desired Velocity and Current Velocity as inputs.
@@ -26,7 +26,7 @@ Focus: Ensuring the drone achieves the exact speed it is commanded to fly.
 [ ] Test this inner loop independently in the simulator by feeding it manual "fake" desired velocities to ensure it accelerates and brakes smoothly.
 
 Role 2: Outer Loop Engineer (Position & Yaw)
-Assignee: _______________________
+Assignee: Macy
 Focus: Navigation, coordinates, and telling the Inner Loop how fast to go.
 
 [ ] Draft the Layer 1 PID function that takes Target Position and Current Position as inputs.
@@ -38,7 +38,7 @@ Focus: Navigation, coordinates, and telling the Inner Loop how fast to go.
 [ ] Write the separate logic to calculate Yaw error and output the yaw rate command.
 
 Role 3: Integrator & Flight Director (Hardware & Testing)
-Assignee: _______________________
+Assignee: Victor
 Focus: Connecting the code, fighting the wind, and flying the real drone.
 
 [ ] Create the controller.py skeleton file so the team can combine their code without breaking the required inputs/outputs. 
