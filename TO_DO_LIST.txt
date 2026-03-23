@@ -7,3 +7,60 @@ Tasks:
 3. Middle Layer
 4. Tune PIDs
 5. Fallback simple PID 
+
+
+Gemini said
+Here is a clean, structured task list broken down by the three roles we discussed, plus the shared deliverables. You can
+copy and paste this directly into a shared document or group chat and just drop your names on the dotted lines.
+
+Role 1: Inner Loop Engineer (Velocity)
+Assignee: _______________________
+Focus: Ensuring the drone achieves the exact speed it is commanded to fly.
+
+[ ] Draft the Layer 2 PID function that takes Desired Velocity and Current Velocity as inputs.
+
+[ ] Write the mathematical logic to output the Commanded Velocity (Vcmd).
+
+[ ] Implement safety limits (clipping) so the output velocity doesn't exceed the DJI Tello's physical limits.
+
+[ ] Test this inner loop independently in the simulator by feeding it manual "fake" desired velocities to ensure it accelerates and brakes smoothly.
+
+Role 2: Outer Loop Engineer (Position & Yaw)
+Assignee: _______________________
+Focus: Navigation, coordinates, and telling the Inner Loop how fast to go.
+
+[ ] Draft the Layer 1 PID function that takes Target Position and Current Position as inputs.
+
+[ ] Write the mathematical logic to output the Desired Velocity (Vdes) to feed into Layer 2.
+
+[ ] Implement the axis transformations required to align the global coordinates with the Tello's control frame. +1
+
+[ ] Write the separate logic to calculate Yaw error and output the yaw rate command.
+
+Role 3: Integrator & Flight Director (Hardware & Testing)
+Assignee: _______________________
+Focus: Connecting the code, fighting the wind, and flying the real drone.
+
+[ ] Create the controller.py skeleton file so the team can combine their code without breaking the required inputs/outputs. 
++1
+
+[ ] Connect Role 2's output (V des) into Role 1's input to complete the 2-layer cascade.
+
+[ ] Turn on the wind flag (Line 1 to True) and tune the Integral gains to achieve a mean positional error of strictly under 0.01m. 
++1
+
+[ ] Lead the physical lab experiment with the DJI Tello, ensuring the drone stays within the safe +/- 1 meter flight zone.
+
+[ ] Collect and export the physical flight data for the team to use in their videos.
+
+Shared Team Tasks (Everyone)
+[ ] Code Review: Ensure the Python code has clear comments explaining the 2-layer cascade method to secure the "good coding practices" and "method explained" marks.
++1
+
+[ ] Fallback Plan: If the advanced cascade is too aggressive for the real Tello, tune a simple, standard PID for the physical experiment.
+
+[ ] Data Visualization: Plot the position and yaw error graphs (mean and standard deviation) to prove performance.
++1
+
+[ ] Individual Videos: Every member must record their own 3-minute video explaining the advanced 2-layer method, the tuning process, and the experimental results. (Note: Anything past the 3-minute mark will be ignored by markers.)
++1
