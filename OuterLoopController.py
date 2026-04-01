@@ -69,15 +69,15 @@ class OuterLoopController:
         
         return v_body[0], v_body[1]
 
-    def compute_outer_loop(self, current_pos, target_pos, current_yaw, target_yaw,dt):
+    def compute_outer_loop(self, current_pos, target_pos, current_yaw, target_yaw):
         """
         Executes the outer loop control logic.
         Returns: 
             v_des_global (np.array): Desired velocity in the global frame [Vx, Vy, Vz].
             yaw_rate_cmd (float): Commanded yaw rate.
         """
-        # current_time = time.time()
-        # dt = current_time - self.last_time
+        current_time = time.time()
+        dt = current_time - self.last_time
         
         # Prevent division by zero on the very first control iteration
         if dt <= 0.0:
