@@ -2,8 +2,9 @@
 # Implement a controller
 
 import numpy as np
-from InnerLoopController import InnerLoopController
 
+# Imports the class from the InnerLoopController.py file and initialses it.
+from InnerLoopController import InnerLoopController
 inner_controller = InnerLoopController()
 
 def controller(state, target_pos, dt, wind_enabled=False):
