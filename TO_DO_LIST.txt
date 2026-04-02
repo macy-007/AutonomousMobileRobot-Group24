@@ -17,13 +17,13 @@ Role 1: Inner Loop Engineer (Velocity)
 Assignee: Ewan
 Focus: Ensuring the drone achieves the exact speed it is commanded to fly.
 
-[ ] Draft the Layer 2 PID function that takes Desired Velocity and Current Velocity as inputs.
+[X] Draft the Layer 2 PID function that takes Desired Velocity and Current Velocity as inputs.
 
-[ ] Write the mathematical logic to output the Commanded Velocity (Vcmd).
+[X] Write the mathematical logic to output the Commanded Velocity (Vcmd).
 
-[ ] Implement safety limits (clipping) so the output velocity doesn't exceed the DJI Tello's physical limits.
+[X] Implement safety limits (clipping) so the output velocity doesn't exceed the DJI Tello's physical limits.
 
-[ ] Test this inner loop independently in the simulator by feeding it manual "fake" desired velocities to ensure it accelerates and brakes smoothly.
+[X] Test this inner loop independently in the simulator by feeding it manual "fake" desired velocities to ensure it accelerates and brakes smoothly.
 
 Role 2: Outer Loop Engineer (Position & Yaw)
 Assignee: Macy
