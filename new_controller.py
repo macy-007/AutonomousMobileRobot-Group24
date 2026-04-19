@@ -1,4 +1,11 @@
+
+wind_flag = True # Needs to be on for additional marks
+# Implement a controller
+
 import numpy as np
+import time
+import os
+import csv
 from OuterLoopController import OuterLoop
 from InnerLoopController import InnerLoopController
 
@@ -6,6 +13,18 @@ from InnerLoopController import InnerLoopController
 # (This is critical for their Integral and Derivative math to work over time)
 outer_loop = OuterLoop()
 inner_loop = InnerLoopController()
+
+timestamp = time.strftime("%Y%m%d_%H%M%S")
+fileName = f"flight_data_{timestamp}.csv"
+
+# If the file doesn't exist yet (e.g., first run), write the headers
+if not os.path.exists(fileName):
+    with open(fileName, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            'current_x', 'current_y', 'current_z', 'current_yaw', 
+            'target_x', 'target_y', 'target_z', 'target_yaw'
+        ])
 
 def controller(state, target_pos, dt, wind_enabled=False):
     # 1. Unpack the simulator state
@@ -16,6 +35,14 @@ def controller(state, target_pos, dt, wind_enabled=False):
     # target_pos format: (x, y, z, yaw)
     target_position = np.array(target_pos[0:3])
     target_yaw = target_pos[3]
+
+    # Append the current states and targets to the CSV file every time step
+    with open(fileName, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            current_pos[0], current_pos[1], current_pos[2], current_yaw,
+            target_pos[0], target_pos[1], target_pos[2], target_pos[3]
+        ])
 
     # 2. Run the Outer Loop (Macy's Code)
     # This outputs desired body velocity AND handles the axis transformation automatically!
