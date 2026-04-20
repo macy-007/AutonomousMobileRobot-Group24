@@ -6,12 +6,12 @@ import numpy as np
 import time
 import os
 import csv
-from OuterLoopController import OuterLoopController
+from OuterLoopController import OuterLoop
 from InnerLoopController import InnerLoopController
 
 # Initialize the controllers outside the main function so they retain their memory 
 # (This is critical for their Integral and Derivative math to work over time)
-outer_loop = OuterLoopController()
+outer_loop = OuterLoop()
 inner_loop = InnerLoopController()
 
 timestamp = time.strftime("%Y%m%d_%H%M%S")
@@ -26,7 +26,7 @@ if not os.path.exists(fileName):
             'target_x', 'target_y', 'target_z', 'target_yaw'
         ])
 
-def controller(state, target_pos, dt, wind_enabled=True):
+def controller(state, target_pos, dt, wind_enabled=False):
     # 1. Unpack the simulator state
     # state format: [x, y, z, roll, pitch, yaw]
     current_pos = np.array(state[0:3])
@@ -52,7 +52,7 @@ def controller(state, target_pos, dt, wind_enabled=True):
 
     # 3. Run the Inner Loop (Ewan's Code)
     # This takes the desired body velocity and outputs the final motor commands
-    final_v = inner_loop.compute_inner_loop(v_des_body, current_pos, dt, current_yaw)
+    final_v = inner_loop.compute_inner_loop(v_des_body, current_pos, dt)
 
     # --- THE SAFETY NET ---
     # If the inner loop accidentally returns None (like on the very first frame), default to zero velocity

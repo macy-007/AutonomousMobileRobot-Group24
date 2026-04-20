@@ -1,9 +1,9 @@
 import numpy as np
 
 SIMULATOR_GAINS = {
-    'kp': [0.3, 0.3, 0.4],   # Driver's reflexes (keep these the same)
-    'ki': [0.05, 0.05, 0.1],
-    'kd': [0.0, 0.0, 0.0]    
+    'kp': [1.0, 1.0, 0.8],
+    'ki': [0.1, 0.1, 0.5],
+    'kd': [0.0, 0.0, 0.0]
 }
 
 gains = SIMULATOR_GAINS
@@ -28,21 +28,12 @@ class InnerLoopController:
         # Error Tallys
         self.integral_vel = np.zeros(3)
         self.prev_error_vel = np.zeros(3)
-        self.max_integral_vel = np.array([0.5, 0.5, 1.0])
+        self.max_integral_vel = 1.0 # Anti-windup
 
         # Velocity Limit 
         self.max_velocity = 1.0 # m/s
 
-    def global_to_body_frame(self, v_global_x, v_global_y, current_yaw):
-            rotation_matrix = np.array([
-                [np.cos(current_yaw), np.sin(current_yaw)],
-                [-np.sin(current_yaw), np.cos(current_yaw)]
-            ])
-            v_global = np.array([v_global_x, v_global_y])
-            v_body = rotation_matrix @ v_global
-            return v_body[0], v_body[1]
-
-    def compute_inner_loop(self,v_des_body, current_pos, dt, current_yaw):
+    def compute_inner_loop(self,v_des_body, current_pos, dt):
         
         # Prevents division by zero on first frame.
         if dt <= 0.0:
@@ -54,12 +45,6 @@ class InnerLoopController:
             return np.array([0.0,0.0,0.0])
         
         current_vel = (current_pos - self.prev_pos) / dt
-
-        v_body_x, v_body_y = self.global_to_body_frame(
-            current_vel[0], current_vel[1], current_yaw
-        )
-
-        current_vel = np.array([v_body_x, v_body_y, current_vel[2]])
 
         # Error Calculation.
         error_vel = v_des_body - current_vel
