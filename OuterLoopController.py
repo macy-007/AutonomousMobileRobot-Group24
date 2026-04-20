@@ -11,9 +11,9 @@ SIMULATOR_GAINS = {
 gains = SIMULATOR_GAINS
 
 # TELLO_REAL_GAINS = {
-#     'kp': [0.5, 0.5, 0.8], 
-#     'ki': [0.01, 0.01, 0.05],
-#     'kd': [0.1, 0.1, 0.1]
+#     'kp': [0.5, 0.5, 1.0], 
+#     'ki': [0.02, 0.02, 0.1],
+#     'kd': [0.0, 0.0, 0.0]
 # }
 # gains = TELLO_REAL_GAINS 
 
