@@ -1,8 +1,8 @@
 import numpy as np
 
 SIMULATOR_GAINS = {
-    'kp': [0.3, 0.3, 0.4],   # Driver's reflexes (keep these the same)
-    'ki': [0.05, 0.05, 0.1],
+    'kp': [0.3, 0.3, 0.2],   # Driver's reflexes (keep these the same)
+    'ki': [0.01, 0.01, 0.1],
     'kd': [0.0, 0.0, 0.0]    
 }
 

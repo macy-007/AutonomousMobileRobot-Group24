@@ -11,7 +11,7 @@ SIMULATOR_GAINS = {
 gains = SIMULATOR_GAINS
 
 # TELLO_REAL_GAINS = {
-#     'kp': [0.5, 0.5, 1.0], 
+#     'kp': [0.5, 0.5, 2.0], 
 #     'ki': [0.02, 0.02, 0.1],
 #     'kd': [0.0, 0.0, 0.0]
 # }
@@ -38,7 +38,7 @@ class OuterLoopController:
         # --- Yaw Loop PID Gains (Yaw -> Yaw Rate) ---
         self.kp_yaw = 1.5
         self.ki_yaw = 0.0
-        self.kd_yaw = 0.2
+        self.kd_yaw = 0.0
         
         # State memory for yaw integration and derivation
         self.integral_yaw = 0.0
