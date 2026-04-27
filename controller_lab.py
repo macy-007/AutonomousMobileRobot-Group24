@@ -11,34 +11,19 @@ import matplotlib.pyplot as plt
 # ==========================================
 
 # --- SIMULATOR GAINS (Decoupled) ---
+
 SIM_OUTER_POS_GAINS = {
-    'kp': [0.8, 0.8, 2.0],   
-    'ki': [0.0, 0.0, 0.1],   
+    'kp': [0.5, 0.5, 2.0],   
+    'ki': [0.02, 0.02, 0.1], 
     'kd': [0.0, 0.0, 0.0]    
 }
 
 SIM_INNER_VEL_GAINS = {
-    'kp': [0.8, 0.8, 2.0],    
-    'ki': [0.1, 0.1, 0.2],    
-    'kd': [0.01, 0.01, 0.02]  
+    'kp': [0.3, 0.3, 0.2],   
+    'ki': [0.01, 0.01, 0.1],   
+    'kd': [0.0, 0.0, 0.0]  
 }
 
-# # --- REAL TELLO GAINS (Decoupled & Tuned) ---
-# # Outer Loop: Calculates desired velocity. Usually softer P, very small I, no D.
-# REAL_OUTER_POS_GAINS = {
-#     'kp': [0.6, 0.6, 1.2],    # P determines how fast drone wants to approach target
-#     'ki': [0.01, 0.01, 0.05], # Small integral to remove long-term static error
-#     'kd': [0.0, 0.0, 0.0]
-# }
-
-# # Inner Loop: Forces drone to match desired velocity. Harder P, larger I for deadband, D for damping.
-# REAL_INNER_VEL_GAINS = {
-#     'kp': [1.0, 1.0, 2.5],    # P determines thrust/burst (Z usually needs more)
-#     'ki': [0.1, 0.1, 0.2],    # Larger integral to punch through motor deadband
-#     'kd': [0.05, 0.05, 0.1]   # D to act as brake and prevent oscillation
-# }
-
-# [TOGGLE HERE]: Change to REAL_OUTER_POS_GAINS and REAL_INNER_VEL_GAINS for lab experiment
 outer_gains = SIM_OUTER_POS_GAINS
 inner_gains = SIM_INNER_VEL_GAINS
 
