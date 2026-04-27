@@ -9,31 +9,51 @@ import matplotlib.pyplot as plt
 # ==========================================
 # 1. CONTROLLER CLASSES & GLOBAL SETUP
 # ==========================================
-SIMULATOR_GAINS = {
-    'kp': [1.0, 1.0, 3.0],   
-    'ki': [0.2, 0.2, 0.5],  
-    'kd': [0.05, 0.05, 0.4]  
+
+# --- SIMULATOR GAINS (Decoupled) ---
+SIM_OUTER_POS_GAINS = {
+    'kp': [0.8, 0.8, 2.0],   
+    'ki': [0.0, 0.0, 0.1],   
+    'kd': [0.0, 0.0, 0.0]    
 }
 
-TELLO_REAL_GAINS = {
-    'kp': [0.5, 0.5, 2.0], 
-    'ki': [0.02, 0.02, 0.1],
-    'kd': [0.01, 0.01, 0.1]
+SIM_INNER_VEL_GAINS = {
+    'kp': [0.8, 0.8, 2.0],    
+    'ki': [0.1, 0.1, 0.2],    
+    'kd': [0.01, 0.01, 0.02]  
 }
 
-# Change to TELLO_REAL_GAINS when flying the real drone
-gains = SIMULATOR_GAINS
+# # --- REAL TELLO GAINS (Decoupled & Tuned) ---
+# # Outer Loop: Calculates desired velocity. Usually softer P, very small I, no D.
+# REAL_OUTER_POS_GAINS = {
+#     'kp': [0.6, 0.6, 1.2],    # P determines how fast drone wants to approach target
+#     'ki': [0.01, 0.01, 0.05], # Small integral to remove long-term static error
+#     'kd': [0.0, 0.0, 0.0]
+# }
+
+# # Inner Loop: Forces drone to match desired velocity. Harder P, larger I for deadband, D for damping.
+# REAL_INNER_VEL_GAINS = {
+#     'kp': [1.0, 1.0, 2.5],    # P determines thrust/burst (Z usually needs more)
+#     'ki': [0.1, 0.1, 0.2],    # Larger integral to punch through motor deadband
+#     'kd': [0.05, 0.05, 0.1]   # D to act as brake and prevent oscillation
+# }
+
+# [TOGGLE HERE]: Change to REAL_OUTER_POS_GAINS and REAL_INNER_VEL_GAINS for lab experiment
+outer_gains = SIM_OUTER_POS_GAINS
+inner_gains = SIM_INNER_VEL_GAINS
 
 class InnerLoopController:
     def __init__(self):
         self.prev_pos = None
-        self.kp_vel = np.array(gains['kp'])
-        self.ki_vel = np.array(gains['ki'])
-        self.kd_vel = np.array(gains['kd'])
+        # Loaded specific inner loop gains
+        self.kp_vel = np.array(inner_gains['kp'])
+        self.ki_vel = np.array(inner_gains['ki'])
+        self.kd_vel = np.array(inner_gains['kd'])
+        
         self.integral_vel = np.zeros(3)
         self.prev_error_vel = np.zeros(3)
         self.max_integral_vel = np.array([0.5, 0.5, 1.0])
-        self.max_velocity = 2.0 # m/s (Safety limit)
+        self.max_velocity = 2.0 # m/s (Absolute safety limit for inner loop)
 
     def global_to_body_frame(self, v_global_x, v_global_y, current_yaw):
         rotation_matrix = np.array([
@@ -73,16 +93,21 @@ class InnerLoopController:
 
 class OuterLoopController:
     def __init__(self):        
-        self.kp_pos = np.array(gains['kp']) 
-        self.ki_pos = np.array(gains['ki']) 
-        self.kd_pos = np.array(gains['kd'])
+        # Loaded specific outer loop gains
+        self.kp_pos = np.array(outer_gains['kp']) 
+        self.ki_pos = np.array(outer_gains['ki']) 
+        self.kd_pos = np.array(outer_gains['kd'])
+        
         self.integral_pos = np.zeros(3)
         self.prev_error_pos = np.zeros(3)
-        self.max_integral_pos = np.array([0.6, 0.6, 1.5]) 
+        # [MODIFIED]: Relaxed outer integral limit to allow I-term to grow and push through steady-state error
+        self.max_integral_pos = np.array([1.5, 1.5, 2.0]) 
         
-        self.kp_yaw = 1.5
-        self.ki_yaw = 0.0
-        self.kd_yaw = 0.0
+        # [MODIFIED]: Softened Yaw parameters to prevent aggressive swaying
+        self.kp_yaw = 0.8   # Lowered from 1.5
+        self.ki_yaw = 0.05  # Added small integral for steady yaw error
+        self.kd_yaw = 0.01  # Added slight damping
+        
         self.integral_yaw = 0.0
         self.prev_error_yaw = 0.0
 
@@ -90,6 +115,7 @@ class OuterLoopController:
         self.max_acceleration = 3.5  
 
     def normalize_angle(self, angle):
+        # Prevents spin of death when wrapping around pi and -pi
         return math.atan2(math.sin(angle), math.cos(angle))
 
     def global_to_body_frame(self, v_global_x, v_global_y, current_yaw):
@@ -103,6 +129,8 @@ class OuterLoopController:
 
     def compute_outer_loop(self, current_pos, target_pos, current_yaw, target_yaw, dt):
         if dt <= 0.0: dt = 0.01 
+        
+        # Reset integrals if target changes significantly
         if getattr(self, 'prev_target_pos', None) is None:
             self.prev_target_pos = target_pos
 
@@ -114,26 +142,32 @@ class OuterLoopController:
             
         self.prev_target_pos = target_pos
             
-        # Yaw Control
+        # 1. Yaw Control
         error_yaw = self.normalize_angle(target_yaw - current_yaw)
         self.integral_yaw += error_yaw * dt
         derivative_yaw = self.normalize_angle(error_yaw - self.prev_error_yaw) / dt
         yaw_rate_cmd = (self.kp_yaw * error_yaw) + (self.ki_yaw * self.integral_yaw) + (self.kd_yaw * derivative_yaw)
         yaw_rate_cmd = np.clip(yaw_rate_cmd, -1.5, 1.5)
         
-        # Position Control
+        # 2. Position Control
         error_pos = target_pos - current_pos
         self.integral_pos += error_pos * dt
         self.integral_pos = np.clip(self.integral_pos, -self.max_integral_pos, self.max_integral_pos)
         derivative_pos = (error_pos - self.prev_error_pos) / dt
         
         v_des_global_raw = (self.kp_pos * error_pos) + (self.ki_pos * self.integral_pos) + (self.kd_pos * derivative_pos)
-        v_des_global_raw = np.clip(v_des_global_raw, -2.0, 2.0)
+        
+        # [MODIFIED]: Solves Z-axis lag by limiting horizontal speed so Z can catch up
+        v_des_global_raw[0] = np.clip(v_des_global_raw[0], -0.8, 0.8) # X max
+        v_des_global_raw[1] = np.clip(v_des_global_raw[1], -0.8, 0.8) # Y max
+        v_des_global_raw[2] = np.clip(v_des_global_raw[2], -1.0, 1.0) # Z max
 
+        # Acceleration slew limiter
         max_dv = self.max_acceleration * dt
         v_des_global = np.clip(v_des_global_raw, self.prev_v_des_global - max_dv, self.prev_v_des_global + max_dv)
         self.prev_v_des_global = v_des_global
         
+        # 3. Global to Body Transformation
         v_body_x, v_body_y = self.global_to_body_frame(v_des_global[0], v_des_global[1], current_yaw)
         v_des_body = np.array([v_body_x, v_body_y, v_des_global[2]])
 
@@ -205,7 +239,11 @@ def plot_flight_data():
     ax4.set_ylabel('Z (m)'); ax4.set_xlabel('Time (s)'); ax4.legend(); ax4.grid(True)
 
     plt.tight_layout()
-    plt.show()
+
+    img_name = fileName.replace(".csv", ".png")    
+    plt.savefig(img_name, dpi=300, bbox_inches='tight')
+    print(f"[INFO] : {img_name}")    
+    plt.close(fig)
 
 atexit.register(plot_flight_data)
 
