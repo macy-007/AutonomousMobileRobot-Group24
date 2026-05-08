@@ -4,6 +4,11 @@ Our cascade controller is divided into two loops:
 1. Outer Loop (Position Controller): Computes the desired global velocity based on position error.
 2. Inner Loop (Velocity Controller): Computes the final control commands to track the desired velocity.
 
+PID Controllers (Proportional Integral Derivative) utilise errors to find its goal:
+
+Proportional: Response is proportional to the size of the current error.
+Integral: Accumulates past error over a time-frame.
+Derivative: Predicts future error by measuring the errors rate of change.
 """
 
 import numpy as np
@@ -33,12 +38,13 @@ class InnerLoopController:
         self.kd_vel = np.array(SIM_INNER_VEL_GAINS['kd'])
         self.integral_vel = np.zeros(3)
         self.prev_error_vel = np.zeros(3)
+
         # Anti-windup limits for safety
         self.max_integral_vel = np.array([0.5, 0.5, 1.0])
         self.max_velocity = 2.0 # m/s
 
     def global_to_body_frame(self, v_global_x, v_global_y, current_yaw):
-        # 2D rotation matrix for horizontal velocity mapping
+        # 2D rotation matrix for horizontal velocity mapping.
         rotation_matrix = np.array([
             [np.cos(current_yaw), np.sin(current_yaw)],
             [-np.sin(current_yaw), np.cos(current_yaw)]
@@ -48,16 +54,23 @@ class InnerLoopController:
         return v_body[0], v_body[1]
 
     def compute_inner_loop(self, v_des_body, current_pos, dt, current_yaw):
-        if dt <= 0.0: dt = 0.01
+
+        # Ensure at intialisation, division by zero doesn't occur.
+        if dt <= 0.0: 
+            dt = 0.01
+
+        # Initialses initial position.
         if self.prev_pos is None:
             self.prev_pos = current_pos
             return np.array([0.0, 0.0, 0.0])
-        # Estimate current velocity using backward difference
+        
+        # Estimate current velocity using backward difference.
         current_vel = (current_pos - self.prev_pos) / dt
-        # Transform velocity to body frame for comparison
+        # Transform velocity to body frame for comparison.
         v_body_x, v_body_y = self.global_to_body_frame(current_vel[0], current_vel[1], current_yaw)
         current_vel = np.array([v_body_x, v_body_y, current_vel[2]])
-        # PID calculation
+
+        # PID calculation.
         error_vel = v_des_body - current_vel
         prop_term = self.kp_vel * error_vel
         self.integral_vel += error_vel * dt
@@ -65,8 +78,11 @@ class InnerLoopController:
         integral_term = self.ki_vel * self.integral_vel
         deriv_vel = (error_vel - self.prev_error_vel) / dt
         deriv_term = self.kd_vel * deriv_vel
+
         # Output command (Feedforward + PID)
         v_out = prop_term + integral_term + deriv_term + v_des_body
+
+        # Limit velocity output.
         v_out = np.clip(v_out, -self.max_velocity, self.max_velocity)
         self.prev_pos = current_pos
         self.prev_error_vel = error_vel
