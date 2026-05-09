@@ -11,20 +11,23 @@ Integral: Accumulates past error over a time-frame.
 Derivative: Predicts future error by measuring the errors rate of change.
 """
 
+# wind_flag = True
+# Tested with wind disturbance
+
 import numpy as np
 import math
 
 # CONTROLLER GAINS 
-# Tuned for gentle approach to prevent positional overshoot
+# Tuned to prevent positional overshoot
 SIM_OUTER_POS_GAINS = {
-    'kp': [1.0, 1.0, 3.0],   
-    'ki': [0.2, 0.2, 0.5],  
-    'kd': [0.05, 0.05, 0.4]      
+    'kp': [0.8, 0.8, 3.0],   
+    'ki': [0.01, 0.01, 0.5],  
+    'kd': [0.5, 0.5, 0.4]      
 }
 # Tuned stiffly to reject wind disturbances quickly
 SIM_INNER_VEL_GAINS = {
     'kp': [0.3, 0.3, 0.2],   # Driver's reflexes (keep these the same)
-    'ki': [0.01, 0.01, 0.1],
+    'ki': [0.05, 0.05, 0.1],
     'kd': [0.0, 0.0, 0.0]    
 }
 
@@ -89,17 +92,17 @@ class InnerLoopController:
         return v_out
 
 class OuterLoopController:
-    """ Computes desired velocity based on distance to target. """
+    """ Computes desired velocity based on position error. """
     def __init__(self):        
         self.kp_pos = np.array(SIM_OUTER_POS_GAINS['kp']) 
         self.ki_pos = np.array(SIM_OUTER_POS_GAINS['ki']) 
         self.kd_pos = np.array(SIM_OUTER_POS_GAINS['kd'])
         self.integral_pos = np.zeros(3)
         self.prev_error_pos = np.zeros(3)
-        self.max_integral_pos = np.array([1.5, 1.5, 2.0]) 
+        self.max_integral_pos = np.array([1.5, 1.5, 2.0]) # Anti-windup bounds
         # Yaw parameters
-        self.kp_yaw = 0.8   
-        self.ki_yaw = 0.05  
+        self.kp_yaw = 1.2   
+        self.ki_yaw = 0.1  
         self.kd_yaw = 0.00  
         self.integral_yaw = 0.0
         self.prev_error_yaw = 0.0
@@ -112,6 +115,7 @@ class OuterLoopController:
         return math.atan2(math.sin(angle), math.cos(angle))
 
     def global_to_body_frame(self, v_global_x, v_global_y, current_yaw):
+        # rotation matrix for horizontal velocity mapping
         rotation_matrix = np.array([
             [np.cos(current_yaw), np.sin(current_yaw)],
             [-np.sin(current_yaw), np.cos(current_yaw)]
@@ -122,8 +126,8 @@ class OuterLoopController:
 
     def compute_outer_loop(self, current_pos, target_pos, current_yaw, target_yaw, dt):
         if dt <= 0.0: dt = 0.01 
-        
-        # Reset integrals if the mission planner gives a completely new target point
+        # Target update check
+        # Reset integrals if get a new target point
         if self.prev_target_pos is None:
             self.prev_target_pos = target_pos
         if np.linalg.norm(target_pos - self.prev_target_pos) > 0.1:
@@ -144,11 +148,11 @@ class OuterLoopController:
         self.integral_pos = np.clip(self.integral_pos, -self.max_integral_pos, self.max_integral_pos)
         derivative_pos = (error_pos - self.prev_error_pos) / dt
         v_des_global_raw = (self.kp_pos * error_pos) + (self.ki_pos * self.integral_pos) + (self.kd_pos * derivative_pos)
-        # Limit horizontal speed slightly to prioritize Z-axis climbing if needed
+        # Limit horizontal speed to prioritize Z-axis climbing if needed
         v_des_global_raw[0] = np.clip(v_des_global_raw[0], -0.8, 0.8) 
         v_des_global_raw[1] = np.clip(v_des_global_raw[1], -0.8, 0.8) 
         v_des_global_raw[2] = np.clip(v_des_global_raw[2], -1.0, 1.0) 
-        # Acceleration slew limiter (prevents sudden jerky movements)
+        # Smooths out acceleration to prevent aggressive tilting
         max_dv = self.max_acceleration * dt
         v_des_global = np.clip(v_des_global_raw, self.prev_v_des_global - max_dv, self.prev_v_des_global + max_dv)
         self.prev_v_des_global = v_des_global
@@ -163,7 +167,7 @@ class OuterLoopController:
 outer_loop = OuterLoopController()
 inner_loop = InnerLoopController()
 
-def controller(state, target_pos, dt, wind_enabled=True):
+def controller(state, target_pos, dt, wind_enabled=False):
     """
     Main entry point for the simulation.
     state: [pos_x, pos_y, pos_z, roll, pitch, yaw]
