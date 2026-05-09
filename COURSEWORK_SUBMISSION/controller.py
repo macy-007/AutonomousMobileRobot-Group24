@@ -163,7 +163,7 @@ class OuterLoopController:
 outer_loop = OuterLoopController()
 inner_loop = InnerLoopController()
 
-def controller(state, target_pos, dt, wind_enabled=False):
+def controller(state, target_pos, dt, wind_enabled=True):
     """
     Main entry point for the simulation.
     state: [pos_x, pos_y, pos_z, roll, pitch, yaw]
