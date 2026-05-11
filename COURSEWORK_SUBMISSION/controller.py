@@ -18,16 +18,15 @@ import numpy as np
 import math
 
 # CONTROLLER GAINS 
-# Tuned to prevent positional overshoot
 SIM_OUTER_POS_GAINS = {
-    'kp': [1.1, 1.1, 3.0],   # The Gas Pedal: Massively boosted from 1.3 to rocket between points!
-    'ki': [0.05, 0.05, 0.5],   # Unchanged.
+    'kp': [1.1, 1.1, 3.0],  
+    'ki': [0.05, 0.05, 0.5], 
     'kd': [0.15, 0.15, 0.4]   
 }
-# Tuned stiffly to reject wind disturbances quickly
+
 SIM_INNER_VEL_GAINS = {
-    'kp': [0.25, 0.25, 0.4],   # The Smoother: Dropped from 0.25 to completely kill the last roll wobble.
-    'ki': [0.15, 0.15, 0.1],   # The Anchor: Doubled from 0.15 to instantly spool up against severe wind!
+    'kp': [0.25, 0.25, 0.4],
+    'ki': [0.15, 0.15, 0.1],   
     'kd': [0.02, 0.02, 0.0]    
 }
 
