@@ -19,9 +19,9 @@ import math
 
 # CONTROLLER GAINS 
 SIM_OUTER_POS_GAINS = {
-    'kp': [1.1, 1.1, 3.0],  
-    'ki': [0.05, 0.05, 0.5], 
-    'kd': [0.15, 0.15, 0.4]   
+    'kp': [1.2, 1.2, 3.0],
+    'ki': [0.05, 0.05, 0.5],   
+    'kd': [0.08, 0.08, 0.4]   
 }
 
 SIM_INNER_VEL_GAINS = {
