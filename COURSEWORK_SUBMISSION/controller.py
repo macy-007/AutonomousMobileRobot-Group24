@@ -1,7 +1,7 @@
 """
 Advanced Method Explanation: Cascade PID Controller
 Our cascade controller is divided into two loops:
-1. Outer Loop (Position Controller): Computes the desired global velocity based on position error.
+1. Outer Loop (Position Controller): Computes the desired global velocity and yaw command based on position error.
 2. Inner Loop (Velocity Controller): Computes the final control commands to track the desired velocity.
 
 PID Controllers (Proportional Integral Derivative) utilise errors to find its goal:
@@ -41,7 +41,7 @@ class InnerLoopController:
         self.integral_vel = np.zeros(3)
         self.prev_error_vel = np.zeros(3)
 
-        # Anti-windup limits for safety
+        # Anti-windup limits for safety.
         self.max_integral_vel = np.array([0.8, 0.8, 1.0])
         self.max_velocity = 2.0 # m/s
 
@@ -81,7 +81,7 @@ class InnerLoopController:
         deriv_vel = (error_vel - self.prev_error_vel) / dt
         deriv_term = self.kd_vel * deriv_vel
 
-        # Output command (Feedforward + PID)
+        # Output command (Feedforward + PID).
         v_out = prop_term + integral_term + deriv_term + v_des_body
 
         # Limit velocity output.
@@ -114,7 +114,7 @@ class OuterLoopController:
         return math.atan2(math.sin(angle), math.cos(angle))
 
     def global_to_body_frame(self, v_global_x, v_global_y, current_yaw):
-        # rotation matrix for horizontal velocity mapping
+        # Rotation matrix for horizontal velocity mapping
         rotation_matrix = np.array([
             [np.cos(current_yaw), np.sin(current_yaw)],
             [-np.sin(current_yaw), np.cos(current_yaw)]
