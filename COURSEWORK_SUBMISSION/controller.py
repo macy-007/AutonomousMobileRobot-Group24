@@ -4,6 +4,14 @@ Our cascade controller is divided into two loops:
 1. Outer Loop (Position Controller): Computes the desired global velocity and yaw command based on position error.
 2. Inner Loop (Velocity Controller): Computes the final control commands to track the desired velocity.
 
+Notable Features:
+ - Utilises a feedforward term for faster velocity response via Inner Loop.
+ - Yaw is used for global-to-body transform, therefore it doesn't need to be transformed itself.
+ - Anti-windup limits are employed for integral terms.
+ - Use of 3 PID Controllers: 
+    - Yaw and Position in parallel.
+    - Velocity in series.
+
 PID Controllers (Proportional Integral Derivative) utilise errors to find its goal:
 
 Proportional: Response is proportional to the size of the current error.
